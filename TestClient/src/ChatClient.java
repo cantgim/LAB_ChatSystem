@@ -3,6 +3,7 @@ import java.io.*;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,9 +19,11 @@ public class ChatClient {
     private InputStream serverIn;
     private OutputStream serverOut;
     private BufferedReader bufferedIn;
+    private boolean isVisibleMsgPane = false;
 
     private ArrayList<UserStatusListener> userStatusListeners = new ArrayList<>();
     private ArrayList<MessageListener> messageListeners = new ArrayList<>();
+    private HashMap<String, MessagePane> msgPaneMap = new HashMap<>();
 
     public ChatClient(String serverName, int serverPort) {
         this.serverName = serverName;
@@ -50,6 +53,18 @@ public class ChatClient {
     public void logoff() throws IOException {
         String cmd = "logoff\n";
         serverOut.write(cmd.getBytes());
+    }
+
+    public boolean register(String login, String password) throws IOException {
+        String cmd = "register " + login + " " + password + "\n";
+        serverOut.write(cmd.getBytes());
+        String response = bufferedIn.readLine();
+        System.out.println("Response Line: " + response);
+        if ("ok register".equalsIgnoreCase(response)) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private void startMessageReader() {
@@ -83,6 +98,13 @@ public class ChatClient {
                     } else if ("msg".equalsIgnoreCase(cmd)) {
                         String[] tokensMsg = line.split(" ", 3);
                         handleMessage(tokensMsg);
+                    } else if ("newuser".equalsIgnoreCase(cmd)) {
+                        handleNewUser(tokens);
+                    } else if ("users".equalsIgnoreCase(cmd)) {
+                        handleListUsers(tokens);
+                    } else if ("msgoffline".equalsIgnoreCase(cmd)) {
+                        String[] tokensMsg = line.split(" ", 3);
+                        handleMsgOffline(tokensMsg);
                     }
                 }
             }
@@ -99,6 +121,16 @@ public class ChatClient {
     private void handleMessage(String[] tokensMsg) {
         String login = tokensMsg[1];
         String msgBody = tokensMsg[2];
+        System.out.println(msgBody);
+        if (messageListeners.isEmpty()) {
+            System.out.println("No msg panel!");
+            if (isExistMsgPane(login)) {
+                MessagePane messagePane = new MessagePane(this, login);
+                msgPaneMap.put(login, messagePane);
+                //isVisibleMsgPane = true;
+                messagePane.setVisible(true);
+            }
+        }
         for (MessageListener listener : messageListeners) {
             listener.onlineMessage(login, msgBody);
         }
@@ -120,6 +152,30 @@ public class ChatClient {
         }
     }
 
+    private void handleNewUser(String[] tokens) {
+        String login = tokens[1];
+        for (UserStatusListener listener : userStatusListeners) {
+            listener.addNewUser(login);
+        }
+    }
+
+    private void handleMsgOffline(String[] tokens) {
+        String sender = tokens[1];
+        String msgBody = tokens[2];
+        System.out.println(msgBody);
+
+        
+    }
+
+    private void handleListUsers(String[] tokens) {
+        for (int i = 1; i < tokens.length; i++) {
+            String login = tokens[i];
+            for (UserStatusListener listener : userStatusListeners) {
+                listener.addNewUser(login);
+            }
+        }
+    }
+
     public boolean connect() {
         try {
             this.socket = new Socket(serverName, serverPort);
@@ -132,6 +188,26 @@ public class ChatClient {
             e.printStackTrace();
         }
         return false;
+    }
+
+    public boolean isExistMsgPane(String login) {
+        return msgPaneMap.containsKey(login);
+    }
+
+    public void addMsgPaneToMap(String login, MessagePane messagePane) {
+        this.msgPaneMap.put(login, messagePane);
+    }
+
+    public void removeMsgPaneFromMap(String login) {
+        this.msgPaneMap.remove(login);
+    }
+
+    public boolean isVisibleMsgPane() {
+        return isVisibleMsgPane;
+    }
+
+    public void setIsVisibleMsgPane(boolean isVisibleMsgPane) {
+        this.isVisibleMsgPane = isVisibleMsgPane;
     }
 
     public synchronized void addUserStatusListener(UserStatusListener listener) {
