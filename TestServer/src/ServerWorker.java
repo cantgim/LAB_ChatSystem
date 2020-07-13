@@ -1,8 +1,10 @@
 
 import java.io.*;
 import java.net.Socket;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -24,9 +26,7 @@ public class ServerWorker extends Thread {
     public void run() {
         try {
             handleClientSocket();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
@@ -49,6 +49,8 @@ public class ServerWorker extends Thread {
                 } else if ("msg".equalsIgnoreCase(cmd)) {
                     String[] tokensMsg = line.split(" ", 3);
                     handleMessage(tokensMsg);
+                } else if ("register".equalsIgnoreCase(cmd)) {
+                    handleRegister(outputStream, tokens);
                 } else {
                     String msg = "unknown " + cmd + "\n";
                     outputStream.write(msg.getBytes());
@@ -71,7 +73,7 @@ public class ServerWorker extends Thread {
             }
         }
         if (!hasOnline) {
-            MyUtils.storeMessageOffline(this.login,sendTo, body);
+            MyUtils.storeMessageOffline(this.login, sendTo, body);
         }
     }
 
@@ -102,9 +104,39 @@ public class ServerWorker extends Thread {
                 String msg = "ok login\n";
                 outputStream.write(msg.getBytes());
                 this.login = login;
-                System.out.println("User logged in succesfully: " + login);
-
                 List<ServerWorker> workerList = server.getWorkerList();
+
+                //load user list
+                ArrayList<String> users = MyUtils.loadAccountRegistration();
+                String listUser = "users";
+
+                for (int i = 0; i < users.size(); i++) {
+                    String user = users.get(i);
+                    if (!user.equals(login)) {
+                        listUser = listUser.concat(" " + user);
+                    }
+                    if (i == users.size() - 1) {
+                        listUser = listUser.concat("\n");
+                    }
+                }
+                System.out.println(listUser);
+                outputStream.write(listUser.getBytes());
+
+                //check for offline message
+                HashMap<String, ArrayList<String>> checkForOfflineMsg = MyUtils.checkForOfflineMsg();
+                Set<String> keySet = checkForOfflineMsg.keySet();
+                for (String infor : keySet) {
+                    String[] split = infor.split("\\-");
+                    String sender = split[0];
+                    String receiver = split[1];
+                    if (receiver.equals(this.login)) {
+                        ArrayList<String> msgs = checkForOfflineMsg.get(infor);
+                        for (String get : msgs) {
+                            String msgOffline = "msgoffline " + sender + " " + get;
+                            send(msgOffline);
+                        }
+                    }
+                }
 
                 // send current user all other online logins
                 for (ServerWorker worker : workerList) {
@@ -137,6 +169,29 @@ public class ServerWorker extends Thread {
                 outputStream.write(msg.getBytes());
             } catch (Exception ex) {
                 ex.printStackTrace();
+            }
+        }
+    }
+
+    private void handleRegister(OutputStream outputStream, String[] tokens) throws IOException {
+        if (tokens.length == 3) {
+            String login = tokens[1];
+            String pass = tokens[2];
+
+            if (MyUtils.checkRegistration(login, pass)) {
+                String msg = "ok register\n";
+                outputStream.write(msg.getBytes());
+
+                List<ServerWorker> workerList = server.getWorkerList();
+
+                // send other online users current user's status
+                String newUserMsg = "newuser " + login + "\n";
+                for (ServerWorker worker : workerList) {
+                    worker.send(newUserMsg);
+                }
+            } else {
+                String msg = "error register\n";
+                outputStream.write(msg.getBytes());
             }
         }
     }
