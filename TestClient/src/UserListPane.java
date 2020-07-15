@@ -1,6 +1,8 @@
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -14,16 +16,26 @@ public class UserListPane extends JPanel implements UserStatusListener {
     private JList<String> userListUI;
     private DefaultListModel<String> userListModel;
     private JButton offlineMsgButton;
+    private OfflineMessagePane offlineMessagePane;
+    int countMsgOffline;
 
     public UserListPane(ChatClient client) {
         this.client = client;
         this.client.addUserStatusListener(this);
 
-        offlineMsgButton = new JButton("Offline Message");
         userListModel = new DefaultListModel<>();
         userListUI = new JList<>(userListModel);
+        System.out.println("Before create offline pane");
+        if (this.client.isHasMsgOffline()) {
+            offlineMessagePane = new OfflineMessagePane(client);
+            System.out.println(System.currentTimeMillis() + " init offline message");
+            offlineMessagePane.setVisible(false);
+        }
+
         setLayout(new BorderLayout());
         add(new JScrollPane(userListUI), BorderLayout.CENTER);
+        countMsgOffline = this.client.getCountMessageOffline();
+        offlineMsgButton = new JButton("Offline Message (" + countMsgOffline + ")");
         add(offlineMsgButton, BorderLayout.SOUTH);
 
         userListUI.addMouseListener(new MouseAdapter() {
@@ -32,15 +44,22 @@ public class UserListPane extends JPanel implements UserStatusListener {
                 if (e.getClickCount() > 1) {
                     String[] split = userListUI.getSelectedValue().split(" ");
                     String login = split[0];
-                    //if (!client.isVisibleMsgPane()) {
                     if (!client.isExistMsgPane(login)) {
                         MessagePane messagePane = new MessagePane(client, login);
                         client.addMsgPaneToMap(login, messagePane);
-                        //client.setIsVisibleMsgPane(true);
                         messagePane.setVisible(true);
                     }
+                }
+            }
+        });
 
-                    //}
+        offlineMsgButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (offlineMessagePane != null) {
+                    offlineMessagePane.setVisible(true);
+                } else {
+                    JOptionPane.showMessageDialog(null, "Empty offline message!");
                 }
             }
         });
@@ -63,6 +82,23 @@ public class UserListPane extends JPanel implements UserStatusListener {
 
     @Override
     public void addNewUser(String login) {
+        if (userListModel == null) {
+            System.out.println("NULLLLLLLLLL");
+        }
         userListModel.addElement(login);
+    }
+
+    public void setLabelOfflineMsg(int count) {
+        offlineMsgButton.setText("Offline Message (" + count + ")");
+    }
+
+    @Override
+    public void updateCountMsgOffline() {
+        int count = countMsgOffline - 1;
+        if (count < 0) {
+            count = 0;
+        }
+        offlineMsgButton.setText("Offline Message (" + count + ")");
+        countMsgOffline = count;
     }
 }

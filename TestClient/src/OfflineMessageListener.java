@@ -9,5 +9,5 @@
  * @author DVG
  */
 public interface OfflineMessageListener {
-    public void addMsgOffline(String login);
+    public void addMsgOffline(String login, int count);
 }

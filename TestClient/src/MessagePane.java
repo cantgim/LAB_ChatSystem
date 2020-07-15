@@ -46,7 +46,7 @@ public class MessagePane extends JFrame implements MessageListener {
                 try {
                     String text = inputField.getText();
                     client.msg(login, text);
-                    listModel.addElement(text);
+                    listModel.addElement("You: " + text);
                     inputField.setText("");
                 } catch (IOException ex) {
                     Logger.getLogger(MessagePane.class.getName()).log(Level.SEVERE, null, ex);
@@ -66,6 +66,10 @@ public class MessagePane extends JFrame implements MessageListener {
     public void onlineMessage(String fromLogin, String msgBody) {
         String line = fromLogin + ": " + msgBody;
         listModel.addElement(line);
+    }
+
+    public void addElementToList(String msg) {
+        listModel.addElement(msg);
     }
 
     private void doClosing() {

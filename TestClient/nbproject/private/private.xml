@@ -3,12 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/RegistrationPane.java</file>
             <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/ChatClient.java</file>
             <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/UserListPane.java</file>
             <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/OfflineMessagePane.java</file>
-            <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/MessageListener.java</file>
-            <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/MessagePane.java</file>
             <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/LoginWindow.java</file>
+            <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/MessagePane.java</file>
+            <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/UserStatusListener.java</file>
             <file>file:/C:/Users/ghienmaytinh.com/Documents/NetBeansProjects/TestClient/src/OfflineMessageListener.java</file>
         </group>
     </open-files>
