@@ -41,7 +41,7 @@ public class ServerWorker extends Thread {
             String[] tokens = line.split(" ");
             if (tokens != null && tokens.length > 0) {
                 String cmd = tokens[0];
-                if ("logoff".equals(cmd) || "quit".equalsIgnoreCase(cmd)) {
+                if ("logoff".equals(cmd)) {
                     handleLogoff();
                     break;
                 } else if ("login".equalsIgnoreCase(cmd)) {
@@ -51,6 +51,8 @@ public class ServerWorker extends Thread {
                     handleMessage(tokensMsg);
                 } else if ("register".equalsIgnoreCase(cmd)) {
                     handleRegister(outputStream, tokens);
+                } else if ("hadread".equalsIgnoreCase(cmd)) {
+                    hadReadMsgOffline(tokens);
                 } else {
                     String msg = "unknown " + cmd + "\n";
                     outputStream.write(msg.getBytes());
@@ -122,22 +124,6 @@ public class ServerWorker extends Thread {
                 System.out.println(listUser);
                 outputStream.write(listUser.getBytes());
 
-                //check for offline message
-                HashMap<String, ArrayList<String>> checkForOfflineMsg = MyUtils.checkForOfflineMsg();
-                Set<String> keySet = checkForOfflineMsg.keySet();
-                for (String infor : keySet) {
-                    String[] split = infor.split("\\-");
-                    String sender = split[0];
-                    String receiver = split[1];
-                    if (receiver.equals(this.login)) {
-                        ArrayList<String> msgs = checkForOfflineMsg.get(infor);
-                        for (String get : msgs) {
-                            String msgOffline = "msgoffline " + sender + " " + get;
-                            send(msgOffline);
-                        }
-                    }
-                }
-
                 // send current user all other online logins
                 for (ServerWorker worker : workerList) {
                     if (worker.getLogin() != null) {
@@ -153,6 +139,23 @@ public class ServerWorker extends Thread {
                 for (ServerWorker worker : workerList) {
                     if (!login.equals(worker.getLogin())) {
                         worker.send(onlineMsg);
+                    }
+                }
+
+                //check for offline message
+                HashMap<String, ArrayList<String>> checkForOfflineMsg = MyUtils.checkForOfflineMsg(this.login);
+                System.out.println(checkForOfflineMsg.size() + " mMMMMMMMM");
+                Set<String> keySet = checkForOfflineMsg.keySet();
+                for (String infor : keySet) {
+                    String[] split = infor.split("\\-");
+                    String sender = split[0];
+
+                    ArrayList<String> msgs = checkForOfflineMsg.get(infor);
+                    System.out.println("Msgs: " + msgs.size());
+                    for (String get : msgs) {
+                        System.out.println("Offline msg is: " + get);
+                        String msgOffline = "msgoffline " + sender + " " + get + "\n";
+                        send(msgOffline);
                     }
                 }
             } else {
@@ -194,5 +197,11 @@ public class ServerWorker extends Thread {
                 outputStream.write(msg.getBytes());
             }
         }
+    }
+
+    private void hadReadMsgOffline(String[] tokens) {
+        String sender = tokens[1];
+        String msgToBeDeleted = sender + "-" + login;
+        MyUtils.deleteMsgHadRead(msgToBeDeleted);
     }
 }
