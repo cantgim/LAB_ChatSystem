@@ -45,9 +45,11 @@ public class MessagePane extends JFrame implements MessageListener {
             public void actionPerformed(ActionEvent e) {
                 try {
                     String text = inputField.getText();
-                    client.msg(login, text);
-                    listModel.addElement("You: " + text);
-                    inputField.setText("");
+                    if (text != null && !"".equals(text)) {
+                        client.msg(login, text);
+                        listModel.addElement("You: " + text);
+                        inputField.setText("");
+                    }
                 } catch (IOException ex) {
                     Logger.getLogger(MessagePane.class.getName()).log(Level.SEVERE, null, ex);
                 }

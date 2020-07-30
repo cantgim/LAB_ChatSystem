@@ -5,6 +5,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -26,8 +28,9 @@ public class UserListPane extends JPanel implements UserStatusListener {
         userListModel = new DefaultListModel<>();
         userListUI = new JList<>(userListModel);
         System.out.println("Before create offline pane");
-        if (this.client.isHasMsgOffline()) {
+        if (this.client.hasMsgOffline) {
             offlineMessagePane = new OfflineMessagePane(client);
+            System.out.println("has Offline messsage!!!!!");
             System.out.println(System.currentTimeMillis() + " init offline message");
             offlineMessagePane.setVisible(false);
         }
@@ -35,6 +38,7 @@ public class UserListPane extends JPanel implements UserStatusListener {
         setLayout(new BorderLayout());
         add(new JScrollPane(userListUI), BorderLayout.CENTER);
         countMsgOffline = this.client.getCountMessageOffline();
+        System.out.println("Set count offline msg!");
         offlineMsgButton = new JButton("Offline Message (" + countMsgOffline + ")");
         add(offlineMsgButton, BorderLayout.SOUTH);
 
@@ -83,6 +87,11 @@ public class UserListPane extends JPanel implements UserStatusListener {
     @Override
     public void addNewUser(String login) {
         if (userListModel == null) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(UserListPane.class.getName()).log(Level.SEVERE, null, ex);
+            }
             System.out.println("NULLLLLLLLLL");
         }
         userListModel.addElement(login);
