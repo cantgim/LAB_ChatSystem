@@ -108,6 +108,23 @@ public class ServerWorker extends Thread {
                 this.login = login;
                 List<ServerWorker> workerList = server.getWorkerList();
 
+                //check for offline message
+                HashMap<String, ArrayList<String>> checkForOfflineMsg = MyUtils.checkForOfflineMsg(this.login);
+                System.out.println(checkForOfflineMsg.size() + " mMMMMMMMM");
+                Set<String> keySet = checkForOfflineMsg.keySet();
+                for (String infor : keySet) {
+                    String[] split = infor.split("\\-");
+                    String sender = split[0];
+
+                    ArrayList<String> msgs = checkForOfflineMsg.get(infor);
+                    System.out.println("Msgs: " + msgs.size());
+                    for (String get : msgs) {
+                        System.out.println("Offline msg is: " + get);
+                        String msgOffline = "msgoffline " + sender + " " + get + "\n";
+                        send(msgOffline);
+                    }
+                }
+                
                 //load user list
                 ArrayList<String> users = MyUtils.loadAccountRegistration();
                 String listUser = "users";
@@ -142,22 +159,7 @@ public class ServerWorker extends Thread {
                     }
                 }
 
-                //check for offline message
-                HashMap<String, ArrayList<String>> checkForOfflineMsg = MyUtils.checkForOfflineMsg(this.login);
-                System.out.println(checkForOfflineMsg.size() + " mMMMMMMMM");
-                Set<String> keySet = checkForOfflineMsg.keySet();
-                for (String infor : keySet) {
-                    String[] split = infor.split("\\-");
-                    String sender = split[0];
-
-                    ArrayList<String> msgs = checkForOfflineMsg.get(infor);
-                    System.out.println("Msgs: " + msgs.size());
-                    for (String get : msgs) {
-                        System.out.println("Offline msg is: " + get);
-                        String msgOffline = "msgoffline " + sender + " " + get + "\n";
-                        send(msgOffline);
-                    }
-                }
+                
             } else {
                 String msg = "error login\n";
                 outputStream.write(msg.getBytes());
